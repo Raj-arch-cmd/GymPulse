@@ -25,7 +25,7 @@ class AnalyticsViewModel : ViewModel() {
 
     private val generativeModel = GenerativeModel(
         modelName = "gemini-pro",
-        apiKey = "AIzaSyCzsCR3nvgtTp8uzwWTl22NV6bskSYBT8s"
+        apiKey = "GEMINI API KEY"
     )
 
     fun getAIInsights(gymId: String, gymName: String) {
