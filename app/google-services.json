@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "699736008988",
+    "project_id": "gympulse-3829b",
+    "storage_bucket": "gympulse-3829b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699736008988:android:72441e25129d6e1ff4f2d9",
+        "android_client_info": {
+          "package_name": "com.example.gympulse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699736008988-ek41atoden5re0ru151kefb8r3d75v3m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.gympulse",
+            "certificate_hash": "2900de21ccd51af10c5025eeed18cbbd85278800"
+          }
+        },
+        {
+          "client_id": "699736008988-9btd23fngj5o8nk2beufasca4ngbu2bd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVvhhVU_9NuSWTCjo-ndGdqe42IcF8lS4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699736008988-9btd23fngj5o8nk2beufasca4ngbu2bd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

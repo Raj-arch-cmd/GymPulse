@@ -1,0 +1,121 @@
+package com.example.gympulse.repository
+
+import android.util.Log
+import com.example.gympulse.model.Session
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import java.util.Calendar
+
+class SessionRepository {
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val sessionsCollection = firestore.collection("sessions")
+    private val gymRepository = GymRepository()
+
+    /**
+     * Creates a real-time Flow that emits true if the user has an active session
+     * and false otherwise. Automatically cleans up the listener when cancelled.
+     */
+    fun listenToActiveSession(userId: String, gymId: String): Flow<Boolean> = callbackFlow {
+        val registration = sessionsCollection
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("gymId", gymId)
+            .whereEqualTo("sessionStatus", "active")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("GymPulse", "Firestore Listener Error: ${error.message}")
+                    return@addSnapshotListener
+                }
+
+                val hasActive = snapshot != null && !snapshot.isEmpty
+                trySend(hasActive)
+            }
+
+        // Essential: Removes the listener when the ViewModel scope is cleared
+        awaitClose {
+            Log.d("GymPulse", "Closing session listener for $userId")
+            registration.remove()
+        }
+    }
+
+    suspend fun checkIn(userId: String, gymId: String): Result<String> {
+        return try {
+            val active = getActiveSession(userId, gymId)
+            if (active != null) return Result.failure(Exception("Already checked in"))
+
+            val calendar = Calendar.getInstance()
+            val days = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+            val dayOfWeek = days[calendar.get(Calendar.DAY_OF_WEEK) - 1]
+            val hourSlot = calendar.get(Calendar.HOUR_OF_DAY)
+
+            val docRef = sessionsCollection.document()
+            val session = Session(
+                sessionId = docRef.id,
+                userId = userId,
+                gymId = gymId,
+                checkInTime = Timestamp.now(),
+                dayOfWeek = dayOfWeek,
+                hourSlot = hourSlot,
+                sessionStatus = "active"
+            )
+
+            docRef.set(session).await()
+            gymRepository.updateGymCount(gymId, increment = true)
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun checkOut(userId: String, gymId: String): Result<Unit> {
+        return try {
+            val activeSession = getActiveSession(userId, gymId)
+                ?: return Result.failure(Exception("No active session found"))
+
+            sessionsCollection.document(activeSession.sessionId)
+                .update(
+                    mapOf(
+                        "checkOutTime" to Timestamp.now(),
+                        "sessionStatus" to "manual_checkout",
+                        "autoCheckedOut" to false
+                    )
+                ).await()
+
+            gymRepository.updateGymCount(gymId, increment = false)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getActiveSession(userId: String, gymId: String): Session? {
+        return try {
+            val snapshot = sessionsCollection
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("gymId", gymId)
+                .whereEqualTo("sessionStatus", "active")
+                .get()
+                .await()
+            snapshot.documents.firstOrNull()?.toObject(Session::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun getUserSessionCount(userId: String): Int {
+        return try {
+            val snapshot = sessionsCollection
+                .whereEqualTo("userId", userId)
+                .whereNotEqualTo("sessionStatus", "active")
+                .get()
+                .await()
+            snapshot.size()
+        } catch (e: Exception) {
+            0
+        }
+    }
+}
