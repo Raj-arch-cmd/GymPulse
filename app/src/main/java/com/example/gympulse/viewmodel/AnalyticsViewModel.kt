@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gympulse.repository.AnalyticsRepository
+import com.example.gympulse.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,14 +24,29 @@ class AnalyticsViewModel : ViewModel() {
     private val _analyticsState = MutableStateFlow<AnalyticsState>(AnalyticsState.Idle)
     val analyticsState: StateFlow<AnalyticsState> = _analyticsState
 
-    private val generativeModel = GenerativeModel(
-        modelName = "gemini-pro",
-        apiKey = "GEMINI API KEY"
-    )
+    private val generativeModel: GenerativeModel? by lazy {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        if (apiKey.isBlank()) {
+            Log.e("GymPulseAI", "Gemini API Key is missing in local.properties")
+            null
+        } else {
+            GenerativeModel(
+                modelName = "gemini-pro",
+                apiKey = apiKey
+            )
+        }
+    }
 
     fun getAIInsights(gymId: String, gymName: String) {
         viewModelScope.launch {
             _analyticsState.value = AnalyticsState.Loading
+            
+            if (generativeModel == null) {
+                Log.w("GymPulseAI", "AI Insights skipped: Missing API Key")
+                handleFailure("AI insights are currently unavailable (Missing API Key).")
+                return@launch
+            }
+
             try {
                 Log.d("GymPulseAI", "Fetching historical data for: $gymName")
                 val stats = repository.getGymHourlyStats(gymId)
@@ -64,8 +80,8 @@ class AnalyticsViewModel : ViewModel() {
 
         try {
             Log.d("GymPulseAI", "Calling Gemini API...")
-            val response = generativeModel.generateContent(prompt)
-            val resultText = response.text
+            val response = generativeModel?.generateContent(prompt)
+            val resultText = response?.text
 
             if (!resultText.isNullOrEmpty()) {
                 Log.d("GymPulseAI", "AI Response received: $resultText")
