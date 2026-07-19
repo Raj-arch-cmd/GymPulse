@@ -15,6 +15,7 @@ import com.example.gympulse.ui.theme.screens.MemberHomeScreen
 import com.example.gympulse.ui.theme.screens.OwnerHomeScreen
 import com.example.gympulse.ui.theme.screens.RegisterScreen
 import com.example.gympulse.ui.theme.screens.SelectGymScreen
+import com.example.gympulse.ui.theme.screens.SplashScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,8 +35,32 @@ fun GymPulseApp() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN
+        startDestination = Routes.SPLASH
     ) {
+        composable(Routes.SPLASH) {
+            SplashScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                },
+                onNavigateToOwnerHome = {
+                    navController.navigate(Routes.OWNER_HOME) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                },
+                onNavigateToSelectGym = {
+                    navController.navigate(Routes.SELECT_GYM) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                },
+                onNavigateToMemberHome = { gymId ->
+                    navController.navigate(Routes.memberHome(gymId)) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Routes.LOGIN) {
             LoginScreen(
                 onNavigateToRegister = {

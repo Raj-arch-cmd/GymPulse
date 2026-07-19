@@ -1,6 +1,7 @@
 package com.example.gympulse.navigation
 
 object Routes {
+    const val SPLASH = "splash"
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val MEMBER_HOME = "member_home/{gymId}"

@@ -2,6 +2,7 @@ package com.example.gympulse.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.gympulse.model.User
 import com.example.gympulse.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,15 @@ sealed class GymSaveState {
     data class Error(val message: String) : GymSaveState()
 }
 
+sealed class SplashState {
+    object Loading : SplashState()
+    object NavigateToLogin : SplashState()
+    data class NavigateToOwnerHome(val user: User) : SplashState()
+    data class NavigateToSelectGym(val user: User) : SplashState()
+    data class NavigateToMemberHome(val user: User) : SplashState()
+    data class Error(val message: String) : SplashState()
+}
+
 class AuthViewModel : ViewModel() {
 
     private val repository = AuthRepository()
@@ -31,7 +41,36 @@ class AuthViewModel : ViewModel() {
     private val _gymSaveState = MutableStateFlow<GymSaveState>(GymSaveState.Idle)
     val gymSaveState: StateFlow<GymSaveState> = _gymSaveState
 
+    private val _splashState = MutableStateFlow<SplashState>(SplashState.Loading)
+    val splashState: StateFlow<SplashState> = _splashState
+
     val isLoggedIn get() = repository.currentUser != null
+
+    fun checkCurrentUser() {
+        viewModelScope.launch {
+            val currentUser = repository.currentUser
+            if (currentUser == null) {
+                _splashState.value = SplashState.NavigateToLogin
+                return@launch
+            }
+            val user = repository.getUser(currentUser.uid)
+            if (user == null) {
+                _splashState.value = SplashState.NavigateToLogin
+                return@launch
+            }
+            _splashState.value = when (user.role) {
+                "owner" -> SplashState.NavigateToOwnerHome(user)
+                "member" -> {
+                    if (user.gymId.isNullOrBlank()) {
+                        SplashState.NavigateToSelectGym(user)
+                    } else {
+                        SplashState.NavigateToMemberHome(user)
+                    }
+                }
+                else -> SplashState.NavigateToLogin
+            }
+        }
+    }
 
     fun loginWithEmail(email: String, password: String) {
         viewModelScope.launch {

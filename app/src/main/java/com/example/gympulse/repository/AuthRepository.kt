@@ -89,4 +89,13 @@ class AuthRepository {
     fun logout() {
         auth.signOut()
     }
+
+    suspend fun getUser(uid: String): User? {
+        return try {
+            val doc = usersCollection.document(uid).get().await()
+            doc.toObject(User::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
