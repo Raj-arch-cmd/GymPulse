@@ -75,6 +75,17 @@ class AuthRepository {
         }
     }
 
+    suspend fun updateUserGymId(uid: String, gymId: String): Result<Unit> {
+        return try {
+            usersCollection.document(uid)
+                .update(mapOf("gymId" to gymId))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun logout() {
         auth.signOut()
     }

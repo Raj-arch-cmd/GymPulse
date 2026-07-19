@@ -14,12 +14,22 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
+sealed class GymSaveState {
+    object Idle : GymSaveState()
+    object Loading : GymSaveState()
+    object Success : GymSaveState()
+    data class Error(val message: String) : GymSaveState()
+}
+
 class AuthViewModel : ViewModel() {
 
     private val repository = AuthRepository()
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
+
+    private val _gymSaveState = MutableStateFlow<GymSaveState>(GymSaveState.Idle)
+    val gymSaveState: StateFlow<GymSaveState> = _gymSaveState
 
     val isLoggedIn get() = repository.currentUser != null
 
@@ -76,5 +86,28 @@ class AuthViewModel : ViewModel() {
 
     fun resetState() {
         _authState.value = AuthState.Idle
+    }
+
+    fun saveSelectedGym(gymId: String) {
+        viewModelScope.launch {
+            val uid = repository.currentUser?.uid
+            if (uid.isNullOrBlank()) {
+                _gymSaveState.value = GymSaveState.Error("User not authenticated")
+                return@launch
+            }
+            _gymSaveState.value = GymSaveState.Loading
+            val result = repository.updateUserGymId(uid, gymId)
+            _gymSaveState.value = if (result.isSuccess) {
+                GymSaveState.Success
+            } else {
+                GymSaveState.Error(
+                    result.exceptionOrNull()?.message ?: "Failed to save gym selection"
+                )
+            }
+        }
+    }
+
+    fun resetGymSaveState() {
+        _gymSaveState.value = GymSaveState.Idle
     }
 }

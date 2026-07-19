@@ -19,20 +19,48 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gympulse.model.Gym
+import com.example.gympulse.viewmodel.AuthViewModel
+import com.example.gympulse.viewmodel.GymSaveState
 import com.example.gympulse.viewmodel.GymState
 import com.example.gympulse.viewmodel.GymViewModel
 
 @Composable
 fun SelectGymScreen(
     onGymSelected: (Gym) -> Unit,
-    gymViewModel: GymViewModel = viewModel()
+    gymViewModel: GymViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val gymState by gymViewModel.gymState.collectAsStateWithLifecycle()
     val gyms by gymViewModel.gyms.collectAsStateWithLifecycle()
+    val gymSaveState by authViewModel.gymSaveState.collectAsStateWithLifecycle()
     var selectedGymId by remember { mutableStateOf("") }
+    var pendingGym by remember { mutableStateOf<Gym?>(null) }
+    var saveErrorMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         gymViewModel.loadAllGyms()
+    }
+
+    LaunchedEffect(gymSaveState) {
+        when (val state = gymSaveState) {
+
+            is GymSaveState.Success -> {
+                pendingGym?.let { gym ->
+                    gymViewModel.selectGym(gym)
+                    onGymSelected(gym)
+                    pendingGym = null
+                }
+                authViewModel.resetGymSaveState()
+            }
+
+            is GymSaveState.Error -> {
+                saveErrorMessage = state.message
+                pendingGym = null
+                authViewModel.resetGymSaveState()
+            }
+
+            else -> {}
+        }
     }
 
     Box(
@@ -190,12 +218,22 @@ fun SelectGymScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    if (saveErrorMessage.isNotEmpty()) {
+                        Text(
+                            text = saveErrorMessage,
+                            color = Color(0xFFFF5252),
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
                     Button(
                         onClick = {
                             val gym = gyms.find { it.gymId == selectedGymId }
                             gym?.let {
-                                gymViewModel.selectGym(it)
-                                onGymSelected(it)
+                                saveErrorMessage = ""
+                                pendingGym = it
+                                authViewModel.saveSelectedGym(it.gymId)
                             }
                         },
                         modifier = Modifier
@@ -206,15 +244,23 @@ fun SelectGymScreen(
                             containerColor = Color(0xFF00E5A0),
                             disabledContainerColor = Color(0xFF333333)
                         ),
-                        enabled = selectedGymId.isNotEmpty()
+                        enabled = selectedGymId.isNotEmpty() && gymSaveState !is GymSaveState.Loading
                     ) {
-                        Text(
-                            text = "Confirm Gym",
-                            color = if (selectedGymId.isNotEmpty())
-                                Color.Black else Color(0xFF888888),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                        if (gymSaveState is GymSaveState.Loading) {
+                            CircularProgressIndicator(
+                                color = Color.Black,
+                                modifier = Modifier.size(22.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Confirm Gym",
+                                color = if (selectedGymId.isNotEmpty())
+                                    Color.Black else Color(0xFF888888),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
                 }
             }
