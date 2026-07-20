@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.gympulse.repository.SessionRepository
 import com.example.gympulse.util.Constants
 import com.example.gympulse.worker.CheckoutReminderWorker
@@ -49,6 +50,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                             
                             val workRequest = OneTimeWorkRequestBuilder<CheckoutReminderWorker>()
                                 .setInitialDelay(Constants.REMINDER_DELAY_MINUTES, TimeUnit.MINUTES)
+                                .setInputData(workDataOf("userId" to userId, "gymId" to gymId))
                                 .build()
 
                             WorkManager.getInstance(context).enqueueUniqueWork(
