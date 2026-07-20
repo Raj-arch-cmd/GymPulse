@@ -44,17 +44,23 @@ class SessionRepository {
 
     suspend fun checkIn(userId: String, gymId: String): Result<String> {
         return try {
+            // 1. Pre-check: Does the user already have an active session?
+            // This is done before the transaction to identify the session to check against.
             val active = getActiveSession(userId, gymId)
-            if (active != null) return Result.failure(Exception("Already checked in"))
+            if (active != null) {
+                return Result.failure(Exception("You already have an active session at this gym."))
+            }
+
+            val gymRef = firestore.collection("gyms").document(gymId)
+            val sessionRef = sessionsCollection.document()
 
             val calendar = Calendar.getInstance()
             val days = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
             val dayOfWeek = days[calendar.get(Calendar.DAY_OF_WEEK) - 1]
             val hourSlot = calendar.get(Calendar.HOUR_OF_DAY)
 
-            val docRef = sessionsCollection.document()
             val session = Session(
-                sessionId = docRef.id,
+                sessionId = sessionRef.id,
                 userId = userId,
                 gymId = gymId,
                 checkInTime = Timestamp.now(),
@@ -63,10 +69,27 @@ class SessionRepository {
                 sessionStatus = "active"
             )
 
-            docRef.set(session).await()
-            gymRepository.updateGymCount(gymId, increment = true)
-            Result.success(docRef.id)
+            firestore.runTransaction { transaction ->
+                // 2. Verify Gym exists and read occupancy
+                val gymSnapshot = transaction.get(gymRef)
+                if (!gymSnapshot.exists()) {
+                    throw Exception("Gym not found")
+                }
+
+                val currentCount = gymSnapshot.getLong("currentCount") ?: 0
+
+                // 3. Create the Session
+                transaction.set(sessionRef, session)
+
+                // 4. Increment Gym occupancy
+                transaction.update(gymRef, "currentCount", currentCount + 1)
+
+                sessionRef.id
+            }.await()
+
+            Result.success(sessionRef.id)
         } catch (e: Exception) {
+            Log.e("GymPulse", "Check-in Transaction Failed: ${e.message}")
             Result.failure(e)
         }
     }

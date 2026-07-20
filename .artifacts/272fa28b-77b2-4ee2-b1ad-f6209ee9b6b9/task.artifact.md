@@ -24,6 +24,7 @@ This roadmap breaks down the implementation of Phase 1 into small, testable chun
 - **Dependencies:** Task 1
 - **Outcome:** Check-in creates a session and increments gym count atomically.
 - **Git Commit:** `feat: implement atomic check-in transaction`
+- **Status:** [x] Done
 
 ## Task 4: Atomic Check-out Transaction
 - **Goal:** Use Firestore transactions to decrement count on checkout.
