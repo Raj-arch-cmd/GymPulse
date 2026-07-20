@@ -7,5 +7,6 @@ data class Gym(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val currentCount: Int = 0,
+    val maxCapacity: Int = 30,
     val ownerId: String = ""
 )
