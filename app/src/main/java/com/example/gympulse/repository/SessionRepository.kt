@@ -95,10 +95,22 @@ class SessionRepository {
     }
 
     suspend fun checkOut(userId: String, gymId: String): Result<Unit> {
+        return performCheckoutTransaction(userId, gymId, Constants.CHECKOUT_TYPE_MANUAL)
+    }
+
+    suspend fun autoCheckOut(userId: String, gymId: String): Result<Unit> {
+        return performCheckoutTransaction(userId, gymId, Constants.CHECKOUT_TYPE_AUTO)
+    }
+
+    private suspend fun performCheckoutTransaction(
+        userId: String,
+        gymId: String,
+        checkoutType: String
+    ): Result<Unit> {
         return try {
             // 1. Find the active session for this user at this gym
             val activeSession = getActiveSession(userId, gymId)
-                ?: return Result.failure(Exception("No active session found. Are you already checked out?"))
+                ?: return Result.failure(Exception("No active session found."))
 
             val gymRef = firestore.collection("gyms").document(gymId)
             val sessionRef = sessionsCollection.document(activeSession.sessionId)
@@ -125,7 +137,7 @@ class SessionRepository {
                         "checkOutTime" to checkOutTime,
                         "duration" to durationMinutes,
                         Constants.FIELD_SESSION_STATUS to Constants.SESSION_STATUS_COMPLETED,
-                        "checkoutType" to Constants.CHECKOUT_TYPE_MANUAL
+                        "checkoutType" to checkoutType
                     )
                 )
 
@@ -138,7 +150,7 @@ class SessionRepository {
 
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("GymPulse", "Check-out Transaction Failed: ${e.message}")
+            Log.e("GymPulse", "$checkoutType Checkout Transaction Failed: ${e.message}")
             Result.failure(e)
         }
     }
