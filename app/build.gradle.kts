@@ -84,8 +84,6 @@ dependencies {
 
     implementation(libs.play.services.location)
 
-    implementation("androidx.core:core-ktx:1.17.0")
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -94,7 +92,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
-
-
+    implementation(libs.google.generativeai)
 }
