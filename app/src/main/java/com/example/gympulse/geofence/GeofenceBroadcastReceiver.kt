@@ -32,17 +32,6 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             val gymId = geofence.requestId
 
             when (transitionType) {
-                // AUTO CHECK-IN: Only after loitering for 1 minute
-                Geofence.GEOFENCE_TRANSITION_DWELL -> {
-                    Log.d("Geofence", "User is at $gymId. Auto checking in...")
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val result = sessionRepository.checkIn(userId, gymId)
-                        if (result.isSuccess) {
-                            GeofenceNotificationHelper.showAutoCheckInNotification(context)
-                        }
-                    }
-                }
-
                 // AUTO CHECK-OUT: Triggered immediately on exit
                 Geofence.GEOFENCE_TRANSITION_EXIT -> {
                     Log.d("Geofence", "Exited gym: $gymId. Auto checking out...")

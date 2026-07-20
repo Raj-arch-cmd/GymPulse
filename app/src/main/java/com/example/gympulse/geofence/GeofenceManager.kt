@@ -38,24 +38,17 @@ class GeofenceManager(private val context: Context) {
             .setRequestId(gymId)
             .setCircularRegion(latitude, longitude, 150f) // 150m radius
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
-            // We listen for DWELL (staying) and EXIT (leaving)
-            .setTransitionTypes(
-                Geofence.GEOFENCE_TRANSITION_DWELL or
-                        Geofence.GEOFENCE_TRANSITION_EXIT
-            )
-            // User must stay inside for 60 seconds to trigger DWELL
-            .setLoiteringDelay(60000)
+            // We listen for EXIT (leaving) for auto-checkout recovery
+            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_EXIT)
             .build()
 
         val request = GeofencingRequest.Builder()
-            // INITIAL_TRIGGER_DWELL: If they are already in the gym when geofence starts,
-            // it will trigger after they loiter for the remainder of the delay.
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_EXIT)
             .addGeofence(geofence)
             .build()
 
         geofencingClient.addGeofences(request, geofencePendingIntent)
-            .addOnSuccessListener { Log.d("Geofence", "Dwell Geofence added for: $gymId") }
+            .addOnSuccessListener { Log.d("Geofence", "Exit Geofence added for: $gymId") }
             .addOnFailureListener { e -> Log.e("Geofence", "Failed: ${e.message}") }
     }
 

@@ -16,6 +16,7 @@ This roadmap breaks down the implementation of Phase 1 into small, testable chun
 - **Dependencies:** None
 - **Outcome:** Geofence `DWELL` transition no longer triggers check-in.
 - **Git Commit:** `refactor: remove geofence-triggered auto check-in`
+- **Status:** [x] Done
 
 ## Task 3: Atomic Check-in Transaction
 - **Goal:** Use Firestore transactions to keep `currentCount` in sync with active sessions.
