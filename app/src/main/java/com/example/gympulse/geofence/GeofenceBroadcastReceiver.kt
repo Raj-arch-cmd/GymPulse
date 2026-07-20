@@ -4,13 +4,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.gympulse.repository.SessionRepository
+import com.example.gympulse.util.Constants
+import com.example.gympulse.worker.CheckoutReminderWorker
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
@@ -32,13 +38,26 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             val gymId = geofence.requestId
 
             when (transitionType) {
-                // AUTO CHECK-OUT: Triggered immediately on exit
+                // RECOVERY TRIGGER: Start the recovery chain when user leaves the gym
                 Geofence.GEOFENCE_TRANSITION_EXIT -> {
-                    Log.d("Geofence", "Exited gym: $gymId. Auto checking out...")
+                    Log.d("Geofence", "Exited gym: $gymId. Checking for active session...")
+                    
                     CoroutineScope(Dispatchers.IO).launch {
-                        val result = sessionRepository.checkOut(userId, gymId)
-                        if (result.isSuccess) {
-                            GeofenceNotificationHelper.showCheckOutNotification(context)
+                        val activeSession = sessionRepository.getActiveSession(userId, gymId)
+                        if (activeSession != null) {
+                            Log.d("Geofence", "Active session found. Scheduling reminder...")
+                            
+                            val workRequest = OneTimeWorkRequestBuilder<CheckoutReminderWorker>()
+                                .setInitialDelay(Constants.REMINDER_DELAY_MINUTES, TimeUnit.MINUTES)
+                                .build()
+
+                            WorkManager.getInstance(context).enqueueUniqueWork(
+                                "recovery_$userId",
+                                ExistingWorkPolicy.REPLACE,
+                                workRequest
+                            )
+                        } else {
+                            Log.d("Geofence", "No active session. Recovery not needed.")
                         }
                     }
                 }
