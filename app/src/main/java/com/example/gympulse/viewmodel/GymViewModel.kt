@@ -31,6 +31,12 @@ class GymViewModel : ViewModel() {
     private val _liveCount = MutableStateFlow(0)
     val liveCount: StateFlow<Int> = _liveCount
 
+    private val _crowdLevel = MutableStateFlow("🟢 Light Crowd")
+    val crowdLevel: StateFlow<String> = _crowdLevel
+
+    private val _showOverCapacityWarning = MutableStateFlow(false)
+    val showOverCapacityWarning: StateFlow<Boolean> = _showOverCapacityWarning
+
     fun registerGym(name: String, address: String, latitude: Double,
                     longitude: Double, ownerId: String) {
         viewModelScope.launch {
@@ -76,7 +82,18 @@ class GymViewModel : ViewModel() {
     private fun listenToLiveCount(gymId: String) {
         repository.listenToGymCount(gymId) { count ->
             _liveCount.value = count
+            updateCrowdInfo(count)
         }
+    }
+
+    private fun updateCrowdInfo(count: Int) {
+        _crowdLevel.value = when {
+            count <= 10 -> "🟢 Light Crowd"
+            count <= 20 -> "🟡 Moderate Crowd"
+            count <= 30 -> "🔴 Heavy Crowd"
+            else -> "🔴 Very Heavy Crowd"
+        }
+        _showOverCapacityWarning.value = count > 30
     }
 
     fun resetState() {

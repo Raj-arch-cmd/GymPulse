@@ -14,7 +14,6 @@ class SessionRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val sessionsCollection = firestore.collection("sessions")
-    private val gymRepository = GymRepository()
 
     /**
      * Creates a real-time Flow that emits true if the user has an active session

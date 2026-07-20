@@ -40,22 +40,6 @@ class GymRepository {
         }
     }
 
-    suspend fun updateGymCount(gymId: String, increment: Boolean): Result<Unit> {
-        return try {
-            val doc = gymsCollection.document(gymId)
-            firestore.runTransaction { transaction ->
-                val snapshot = transaction.get(doc)
-                val currentCount = snapshot.getLong("currentCount") ?: 0
-                val newCount = if (increment)
-                    currentCount + 1 else maxOf(0, currentCount - 1)
-                transaction.update(doc, "currentCount", newCount)
-            }.await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     fun listenToGymCount(gymId: String, onUpdate: (Int) -> Unit) =
         gymsCollection.document(gymId)
             .addSnapshotListener { snapshot, _ ->

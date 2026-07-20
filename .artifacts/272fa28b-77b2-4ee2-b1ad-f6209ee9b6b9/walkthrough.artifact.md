@@ -91,5 +91,32 @@ This ensures that even if manual database edits or race conditions occur, the ap
 ### Verification Results
 - **Project Build:** `app:assembleDebug` completed successfully.
 
+## Task 6: Crowd Level Logic in ViewModel
+
+I have implemented the crowd level calculation logic in `GymViewModel`. This logic transforms the raw occupancy count into student-friendly status labels and detects when the gym is above its recommended capacity.
+
+### Changes Made
+
+#### [GymViewModel.kt](file:///Users/rajsingh/AndroidStudioProjects/GymPulse/app/src/main/java/com/example/gympulse/viewmodel/GymViewModel.kt)
+- **Exposed State:** Added `crowdLevel` (StateFlow<String>) and `showOverCapacityWarning` (StateFlow<Boolean>).
+- **Reactive Updates:** Updated the `listenToLiveCount` internal logic to trigger a recalculation of crowd information every time a new occupancy count is received from Firestore.
+- **Range Implementation:**
+    - `0–10`: 🟢 Light Crowd
+    - `11–20`: 🟡 Moderate Crowd
+    - `21–30`: 🔴 Heavy Crowd
+    - `31+`: 🔴 Very Heavy Crowd
+- **Over-Capacity Detection:** The `showOverCapacityWarning` boolean is set to `true` if the count exceeds 30, allowing the UI to show the "⚠️ Above recommended capacity" message.
+
+### Logic Flow: Crowd Level Calculation
+1.  **Event:** A student checks in or out, and Firestore emits a new `currentCount`.
+2.  **Processing:** `GymViewModel` receives the count and passes it to `updateCrowdInfo(count)`.
+3.  **Calculation:**
+    - The `crowdLevel` string is determined using a `when` block with fixed ranges.
+    - The `showOverCapacityWarning` flag is toggled based on the capacity limit of 30.
+4.  **Observation:** The UI (in the next task) will observe these properties to update the dashboard instantly.
+
+### Verification Results
+- **Project Build:** `app:assembleDebug` completed successfully.
+
 ## Next Steps
-Task 4 is verified. We are now ready to move to **Task 5: Repository Cleanup**, where we will remove the now-obsolete manual count update methods from `GymRepository` and clean up unused dependencies.
+Task 6 is verified. We are now ready to move to **Task 7: UI Update**, where we will connect these new ViewModel properties to the `MemberHomeScreen` dashboard.

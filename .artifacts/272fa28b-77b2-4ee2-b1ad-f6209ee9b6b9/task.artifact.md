@@ -36,10 +36,11 @@ This roadmap breaks down the implementation of Phase 1 into small, testable chun
 
 ## Task 5: Repository Cleanup
 - **Goal:** Remove redundant count update methods in `GymRepository`.
-- **Files to modify:** `GymRepository.kt`
+- **Files to modify:** `GymRepository.kt`, `SessionRepository.kt`
 - **Dependencies:** Task 4
 - **Outcome:** `SessionRepository` is the sole owner of occupancy count changes.
 - **Git Commit:** `refactor: remove redundant gym count update logic`
+- **Status:** [x] Done
 
 ## Task 6: Crowd Level Logic in ViewModel
 - **Goal:** Implement fixed-range crowd level labels (0-10 Light, 11-20 Moderate, 21-30 Heavy, 31+ Very Heavy).
@@ -47,6 +48,7 @@ This roadmap breaks down the implementation of Phase 1 into small, testable chun
 - **Dependencies:** Task 1
 - **Outcome:** ViewModel exposes the calculated crowd label.
 - **Git Commit:** `feat: add fixed-range crowd level calculation`
+- **Status:** [x] Done
 
 ## Task 7: UI Update
 - **Goal:** Update the dashboard to show the new crowd level labels and a warning if occupancy exceeds 30.
