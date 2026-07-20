@@ -93,4 +93,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.google.generativeai)
+
+    implementation(libs.androidx.work.runtime.ktx)
 }

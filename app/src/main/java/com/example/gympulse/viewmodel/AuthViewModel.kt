@@ -3,6 +3,7 @@ package com.example.gympulse.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gympulse.model.User
+import com.example.gympulse.util.Constants
 import com.example.gympulse.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,8 +60,8 @@ class AuthViewModel : ViewModel() {
                 return@launch
             }
             _splashState.value = when (user.role) {
-                "owner" -> SplashState.NavigateToOwnerHome(user)
-                "member" -> {
+                Constants.ROLE_OWNER -> SplashState.NavigateToOwnerHome(user)
+                Constants.ROLE_MEMBER -> {
                     if (user.gymId.isNullOrBlank()) {
                         SplashState.NavigateToSelectGym(user)
                     } else {

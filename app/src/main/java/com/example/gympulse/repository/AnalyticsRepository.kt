@@ -1,6 +1,7 @@
 package com.example.gympulse.repository
 
 import android.util.Log
+import com.example.gympulse.util.Constants
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -16,9 +17,9 @@ class AnalyticsRepository {
     suspend fun getGymHourlyStats(gymId: String): String {
         return try {
             val snapshot = sessionsCollection
-                .whereEqualTo("gymId", gymId)
+                .whereEqualTo(Constants.FIELD_GYM_ID, gymId)
                 // Filter for completed sessions to get accurate historical data
-                .whereIn("sessionStatus", listOf("manual_checkout", "auto_checkout"))
+                .whereEqualTo(Constants.FIELD_SESSION_STATUS, Constants.SESSION_STATUS_COMPLETED)
                 .get()
                 .await()
 

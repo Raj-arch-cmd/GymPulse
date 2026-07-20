@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gympulse.util.Constants
 import com.example.gympulse.viewmodel.AuthState
 import com.example.gympulse.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -70,7 +71,7 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
-                if (state.role == "owner") onOwnerSuccess()
+                if (state.role == Constants.ROLE_OWNER) onOwnerSuccess()
                 else onMemberSuccess()
                 viewModel.resetState()
             }

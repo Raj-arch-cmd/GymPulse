@@ -2,6 +2,7 @@ package com.example.gympulse.repository
 
 import android.util.Log
 import com.example.gympulse.model.Session
+import com.example.gympulse.util.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -21,9 +22,9 @@ class SessionRepository {
      */
     fun listenToActiveSession(userId: String, gymId: String): Flow<Boolean> = callbackFlow {
         val registration = sessionsCollection
-            .whereEqualTo("userId", userId)
-            .whereEqualTo("gymId", gymId)
-            .whereEqualTo("sessionStatus", "active")
+            .whereEqualTo(Constants.FIELD_USER_ID, userId)
+            .whereEqualTo(Constants.FIELD_GYM_ID, gymId)
+            .whereEqualTo(Constants.FIELD_SESSION_STATUS, Constants.SESSION_STATUS_ACTIVE)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e("GymPulse", "Firestore Listener Error: ${error.message}")
@@ -65,7 +66,7 @@ class SessionRepository {
                 checkInTime = Timestamp.now(),
                 dayOfWeek = dayOfWeek,
                 hourSlot = hourSlot,
-                sessionStatus = "active"
+                sessionStatus = Constants.SESSION_STATUS_ACTIVE
             )
 
             firestore.runTransaction { transaction ->
@@ -75,13 +76,13 @@ class SessionRepository {
                     throw Exception("Gym not found")
                 }
 
-                val currentCount = gymSnapshot.getLong("currentCount") ?: 0
+                val currentCount = gymSnapshot.getLong(Constants.FIELD_CURRENT_COUNT) ?: 0
 
                 // 3. Create the Session
                 transaction.set(sessionRef, session)
 
                 // 4. Increment Gym occupancy
-                transaction.update(gymRef, "currentCount", currentCount + 1)
+                transaction.update(gymRef, Constants.FIELD_CURRENT_COUNT, currentCount + 1)
 
                 sessionRef.id
             }.await()
@@ -115,7 +116,7 @@ class SessionRepository {
                     throw Exception("Gym not found")
                 }
 
-                val currentCount = gymSnapshot.getLong("currentCount") ?: 0
+                val currentCount = gymSnapshot.getLong(Constants.FIELD_CURRENT_COUNT) ?: 0
                 
                 // 3. Update the Session document
                 transaction.update(
@@ -123,14 +124,14 @@ class SessionRepository {
                     mapOf(
                         "checkOutTime" to checkOutTime,
                         "duration" to durationMinutes,
-                        "sessionStatus" to "completed",
-                        "checkoutType" to "MANUAL"
+                        Constants.FIELD_SESSION_STATUS to Constants.SESSION_STATUS_COMPLETED,
+                        "checkoutType" to Constants.CHECKOUT_TYPE_MANUAL
                     )
                 )
 
                 // 4. Decrement Gym occupancy (Prevent negative values)
                 val newCount = if (currentCount > 0) currentCount - 1 else 0
-                transaction.update(gymRef, "currentCount", newCount)
+                transaction.update(gymRef, Constants.FIELD_CURRENT_COUNT, newCount)
 
                 null
             }.await()
@@ -145,9 +146,9 @@ class SessionRepository {
     suspend fun getActiveSession(userId: String, gymId: String): Session? {
         return try {
             val snapshot = sessionsCollection
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("gymId", gymId)
-                .whereEqualTo("sessionStatus", "active")
+                .whereEqualTo(Constants.FIELD_USER_ID, userId)
+                .whereEqualTo(Constants.FIELD_GYM_ID, gymId)
+                .whereEqualTo(Constants.FIELD_SESSION_STATUS, Constants.SESSION_STATUS_ACTIVE)
                 .get()
                 .await()
             snapshot.documents.firstOrNull()?.toObject(Session::class.java)
@@ -159,8 +160,8 @@ class SessionRepository {
     suspend fun getUserSessionCount(userId: String): Int {
         return try {
             val snapshot = sessionsCollection
-                .whereEqualTo("userId", userId)
-                .whereNotEqualTo("sessionStatus", "active")
+                .whereEqualTo(Constants.FIELD_USER_ID, userId)
+                .whereNotEqualTo(Constants.FIELD_SESSION_STATUS, Constants.SESSION_STATUS_ACTIVE)
                 .get()
                 .await()
             snapshot.size()

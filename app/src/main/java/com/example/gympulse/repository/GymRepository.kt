@@ -1,6 +1,7 @@
 package com.example.gympulse.repository
 
 import com.example.gympulse.model.Gym
+import com.example.gympulse.util.Constants
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -43,7 +44,7 @@ class GymRepository {
     fun listenToGymCount(gymId: String, onUpdate: (Int) -> Unit) =
         gymsCollection.document(gymId)
             .addSnapshotListener { snapshot, _ ->
-                val count = snapshot?.getLong("currentCount")?.toInt() ?: 0
+                val count = snapshot?.getLong(Constants.FIELD_CURRENT_COUNT)?.toInt() ?: 0
                 onUpdate(count)
             }
 }

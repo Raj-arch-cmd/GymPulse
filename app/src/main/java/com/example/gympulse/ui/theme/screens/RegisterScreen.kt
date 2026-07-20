@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gympulse.util.Constants
 import com.example.gympulse.viewmodel.AuthState
 import com.example.gympulse.viewmodel.AuthViewModel
 
@@ -40,13 +41,13 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var selectedRole by remember { mutableStateOf("member") }
+    var selectedRole by remember { mutableStateOf(Constants.ROLE_MEMBER) }
     var errorMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
-                if (state.role == "owner") onOwnerSuccess()
+                if (state.role == Constants.ROLE_OWNER) onOwnerSuccess()
                 else onMemberSuccess()
                 viewModel.resetState()
             }
@@ -110,24 +111,24 @@ fun RegisterScreen(
                         .height(52.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(
-                            if (selectedRole == "member")
+                            if (selectedRole == Constants.ROLE_MEMBER)
                                 Color(0xFF00E5A0).copy(alpha = 0.15f)
                             else Color(0xFF1A1A1A)
                         )
                         .border(
-                            width = if (selectedRole == "member") 1.5.dp else 0.5.dp,
-                            color = if (selectedRole == "member")
+                            width = if (selectedRole == Constants.ROLE_MEMBER) 1.5.dp else 0.5.dp,
+                            color = if (selectedRole == Constants.ROLE_MEMBER)
                                 Color(0xFF00E5A0) else Color(0xFF333333),
                             shape = RoundedCornerShape(12.dp)
                         )
-                        .clickable { selectedRole = "member" },
+                        .clickable { selectedRole = Constants.ROLE_MEMBER },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Gym Member",
-                        color = if (selectedRole == "member")
+                        color = if (selectedRole == Constants.ROLE_MEMBER)
                             Color(0xFF00E5A0) else Color(0xFF888888),
-                        fontWeight = if (selectedRole == "member")
+                        fontWeight = if (selectedRole == Constants.ROLE_MEMBER)
                             FontWeight.Bold else FontWeight.Normal,
                         fontSize = 14.sp
                     )
@@ -140,24 +141,24 @@ fun RegisterScreen(
                         .height(52.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(
-                            if (selectedRole == "owner")
+                            if (selectedRole == Constants.ROLE_OWNER)
                                 Color(0xFF00E5A0).copy(alpha = 0.15f)
                             else Color(0xFF1A1A1A)
                         )
                         .border(
-                            width = if (selectedRole == "owner") 1.5.dp else 0.5.dp,
-                            color = if (selectedRole == "owner")
+                            width = if (selectedRole == Constants.ROLE_OWNER) 1.5.dp else 0.5.dp,
+                            color = if (selectedRole == Constants.ROLE_OWNER)
                                 Color(0xFF00E5A0) else Color(0xFF333333),
                             shape = RoundedCornerShape(12.dp)
                         )
-                        .clickable { selectedRole = "owner" },
+                        .clickable { selectedRole = Constants.ROLE_OWNER },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Gym Owner",
-                        color = if (selectedRole == "owner")
+                        color = if (selectedRole == Constants.ROLE_OWNER)
                             Color(0xFF00E5A0) else Color(0xFF888888),
-                        fontWeight = if (selectedRole == "owner")
+                        fontWeight = if (selectedRole == Constants.ROLE_OWNER)
                             FontWeight.Bold else FontWeight.Normal,
                         fontSize = 14.sp
                     )

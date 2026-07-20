@@ -1,6 +1,7 @@
 package com.example.gympulse.repository
 
 import com.example.gympulse.model.User
+import com.example.gympulse.util.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
@@ -56,7 +57,7 @@ class AuthRepository {
                     uid = uid,
                     name = result.user?.displayName ?: "",
                     email = result.user?.email ?: "",
-                    role = "member"
+                    role = Constants.ROLE_MEMBER
                 )
                 usersCollection.document(uid).set(user).await()
             }
@@ -69,9 +70,9 @@ class AuthRepository {
     suspend fun getUserRole(uid: String): String {
         return try {
             val doc = usersCollection.document(uid).get().await()
-            doc.getString("role") ?: "member"
+            doc.getString(Constants.FIELD_ROLE) ?: Constants.ROLE_MEMBER
         } catch (e: Exception) {
-            "member"
+            Constants.ROLE_MEMBER
         }
     }
 
