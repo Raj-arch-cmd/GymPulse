@@ -28,10 +28,11 @@ This roadmap breaks down the implementation of Phase 1 into small, testable chun
 
 ## Task 4: Atomic Check-out Transaction
 - **Goal:** Use Firestore transactions to decrement count on checkout.
-- **Files to modify:** `SessionRepository.kt`
+- **Files to modify:** `SessionRepository.kt`, `Session.kt`
 - **Dependencies:** Task 3
 - **Outcome:** Check-out updates session and decrements gym count atomically.
 - **Git Commit:** `feat: implement atomic check-out transaction`
+- **Status:** [x] Done
 
 ## Task 5: Repository Cleanup
 - **Goal:** Remove redundant count update methods in `GymRepository`.

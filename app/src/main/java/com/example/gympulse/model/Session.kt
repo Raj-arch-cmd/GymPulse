@@ -8,8 +8,9 @@ data class Session(
     val gymId: String = "",
     val checkInTime: Timestamp? = null,
     val checkOutTime: Timestamp? = null,
+    val duration: Long = 0, // Duration in minutes
     val dayOfWeek: String = "",
     val hourSlot: Int = 0,
     val sessionStatus: String = "active",
-    val autoCheckedOut: Boolean = false
+    val checkoutType: String = "" // "MANUAL" or "AUTO"
 )

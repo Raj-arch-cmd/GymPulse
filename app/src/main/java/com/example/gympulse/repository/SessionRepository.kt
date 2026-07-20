@@ -96,21 +96,49 @@ class SessionRepository {
 
     suspend fun checkOut(userId: String, gymId: String): Result<Unit> {
         return try {
+            // 1. Find the active session for this user at this gym
             val activeSession = getActiveSession(userId, gymId)
-                ?: return Result.failure(Exception("No active session found"))
+                ?: return Result.failure(Exception("No active session found. Are you already checked out?"))
 
-            sessionsCollection.document(activeSession.sessionId)
-                .update(
+            val gymRef = firestore.collection("gyms").document(gymId)
+            val sessionRef = sessionsCollection.document(activeSession.sessionId)
+            val checkOutTime = Timestamp.now()
+
+            // Calculate duration in minutes
+            val checkInTime = activeSession.checkInTime ?: checkOutTime
+            val durationMillis = checkOutTime.toDate().time - checkInTime.toDate().time
+            val durationMinutes = durationMillis / (1000 * 60)
+
+            firestore.runTransaction { transaction ->
+                // 2. Read current gym occupancy
+                val gymSnapshot = transaction.get(gymRef)
+                if (!gymSnapshot.exists()) {
+                    throw Exception("Gym not found")
+                }
+
+                val currentCount = gymSnapshot.getLong("currentCount") ?: 0
+                
+                // 3. Update the Session document
+                transaction.update(
+                    sessionRef,
                     mapOf(
-                        "checkOutTime" to Timestamp.now(),
-                        "sessionStatus" to "manual_checkout",
-                        "autoCheckedOut" to false
+                        "checkOutTime" to checkOutTime,
+                        "duration" to durationMinutes,
+                        "sessionStatus" to "completed",
+                        "checkoutType" to "MANUAL"
                     )
-                ).await()
+                )
 
-            gymRepository.updateGymCount(gymId, increment = false)
+                // 4. Decrement Gym occupancy (Prevent negative values)
+                val newCount = if (currentCount > 0) currentCount - 1 else 0
+                transaction.update(gymRef, "currentCount", newCount)
+
+                null
+            }.await()
+
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("GymPulse", "Check-out Transaction Failed: ${e.message}")
             Result.failure(e)
         }
     }

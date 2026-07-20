@@ -50,5 +50,46 @@ I have implemented the atomic check-in transaction in `SessionRepository`, ensur
 - **Project Build:** `app:assembleDebug` completed successfully.
 - **Error Handling:** The transaction catch block logs failures and returns a `Result.failure`, allowing the ViewModel to display appropriate feedback to the user.
 
+## Task 4: Atomic Check-out Transaction
+
+I have implemented the atomic check-out transaction in `SessionRepository`, completing the core reliable session engine.
+
+### Changes Made
+
+#### [Session.kt](file:///Users/rajsingh/AndroidStudioProjects/GymPulse/app/src/main/java/com/example/gympulse/model/Session.kt)
+- Updated the data model to include `duration` (Long) and `checkoutType` (String).
+- Removed the legacy `autoCheckedOut` boolean in favor of the more descriptive `checkoutType`.
+
+#### [SessionRepository.kt](file:///Users/rajsingh/AndroidStudioProjects/GymPulse/app/src/main/java/com/example/gympulse/repository/SessionRepository.kt)
+- Refactored `checkOut` to use `firestore.runTransaction`.
+- **Validation:** Verifies an active session exists before starting the transaction.
+- **Transaction Logic:**
+    1.  Reads the `Gym` document to get the current occupancy count.
+    2.  Calculates the session duration (in minutes).
+    3.  Updates the `Session` document with `checkOutTime`, `duration`, `status: "completed"`, and `checkoutType: "MANUAL"`.
+    4.  Decrements the gym's `currentCount`, ensuring it never drops below zero.
+
+### Data Flow: Atomic Check-out
+1.  **User Action:** Student taps "Check Out" on the dashboard.
+2.  **Lookup:** The app identifies the active session document.
+3.  **Transaction Start:**
+    - The gym occupancy is read.
+    - Duration is calculated on the fly.
+    - The session is updated to `completed`.
+    - The gym occupancy count is decremented.
+4.  **Atomic Commit:** Both updates are committed simultaneously.
+5.  **Reactive Update:** All connected clients receive the decremented count instantly, and the user's local UI switches back to the "Check In" state.
+
+### Preventing Negative Occupancy
+To ensure data integrity, the transaction includes a safety check:
+```kotlin
+val newCount = if (currentCount > 0) currentCount - 1 else 0
+transaction.update(gymRef, "currentCount", newCount)
+```
+This ensures that even if manual database edits or race conditions occur, the app will never display a negative occupancy count.
+
+### Verification Results
+- **Project Build:** `app:assembleDebug` completed successfully.
+
 ## Next Steps
-Task 3 is verified. We are now ready to move to **Task 4: Atomic Check-out Transaction**, applying the same level of data consistency to the checkout process.
+Task 4 is verified. We are now ready to move to **Task 5: Repository Cleanup**, where we will remove the now-obsolete manual count update methods from `GymRepository` and clean up unused dependencies.
