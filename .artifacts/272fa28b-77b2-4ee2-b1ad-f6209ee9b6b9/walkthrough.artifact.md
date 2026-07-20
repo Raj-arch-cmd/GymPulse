@@ -91,32 +91,32 @@ This ensures that even if manual database edits or race conditions occur, the ap
 ### Verification Results
 - **Project Build:** `app:assembleDebug` completed successfully.
 
-## Task 6: Crowd Level Logic in ViewModel
+## Task 7: Member Home Screen UI Update
 
-I have implemented the crowd level calculation logic in `GymViewModel`. This logic transforms the raw occupancy count into student-friendly status labels and detects when the gym is above its recommended capacity.
+I have updated the `MemberHomeScreen` to display the new student-friendly crowd information and over-capacity warnings.
 
 ### Changes Made
 
-#### [GymViewModel.kt](file:///Users/rajsingh/AndroidStudioProjects/GymPulse/app/src/main/java/com/example/gympulse/viewmodel/GymViewModel.kt)
-- **Exposed State:** Added `crowdLevel` (StateFlow<String>) and `showOverCapacityWarning` (StateFlow<Boolean>).
-- **Reactive Updates:** Updated the `listenToLiveCount` internal logic to trigger a recalculation of crowd information every time a new occupancy count is received from Firestore.
-- **Range Implementation:**
-    - `0–10`: 🟢 Light Crowd
-    - `11–20`: 🟡 Moderate Crowd
-    - `21–30`: 🔴 Heavy Crowd
-    - `31+`: 🔴 Very Heavy Crowd
-- **Over-Capacity Detection:** The `showOverCapacityWarning` boolean is set to `true` if the count exceeds 30, allowing the UI to show the "⚠️ Above recommended capacity" message.
+#### [MemberHomeScreen.kt](file:///Users/rajsingh/AndroidStudioProjects/GymPulse/app/src/main/java/com/example/gympulse/ui/theme/screens/MemberHomeScreen.kt)
+- **State Integration:** Now collects `crowdLevel` and `showOverCapacityWarning` from the `GymViewModel` using `collectAsStateWithLifecycle`.
+- **UI Simplification:** Replaced the large numeric counter with the descriptive `crowdLevel` label and a smaller "X Members" indicator.
+- **Dynamic Warning:** Added a warning text ("⚠️ Above recommended capacity") that only appears when occupancy exceeds 30.
+- **Cleanup:** Removed all local occupancy calculation logic, ensuring the ViewModel is the single source of truth for all business logic.
 
-### Logic Flow: Crowd Level Calculation
-1.  **Event:** A student checks in or out, and Firestore emits a new `currentCount`.
-2.  **Processing:** `GymViewModel` receives the count and passes it to `updateCrowdInfo(count)`.
-3.  **Calculation:**
-    - The `crowdLevel` string is determined using a `when` block with fixed ranges.
-    - The `showOverCapacityWarning` flag is toggled based on the capacity limit of 30.
-4.  **Observation:** The UI (in the next task) will observe these properties to update the dashboard instantly.
+### UI Reaction to Data
+The UI is now fully reactive. Whenever the Firestore occupancy count changes:
+1.  The `GymViewModel` recalculates the `crowdLevel` and `showOverCapacityWarning`.
+2.  The `StateFlow` updates propagate to the `MemberHomeScreen`.
+3.  Compose recomposes the occupancy card instantly, showing the latest status to the student.
+
+### Final UI Appearance (Description)
+The occupancy card now features:
+- A bold status line (e.g., **🟢 Light Crowd**) at the top.
+- A secondary line indicating the exact count (e.g., **8 Members**).
+- An optional red warning line (e.g., **⚠️ Above recommended capacity**) if the count is 31 or higher.
 
 ### Verification Results
 - **Project Build:** `app:assembleDebug` completed successfully.
 
 ## Next Steps
-Task 6 is verified. We are now ready to move to **Task 7: UI Update**, where we will connect these new ViewModel properties to the `MemberHomeScreen` dashboard.
+Task 7 is verified. We are now ready to move to the final task of Phase 1: **Task 8: Constants Cleanup**, where we will centralize all status and role strings to prevent potential bugs.

@@ -56,6 +56,7 @@ This roadmap breaks down the implementation of Phase 1 into small, testable chun
 - **Dependencies:** Task 6
 - **Outcome:** Dashboard displays "Light", "Moderate", "Heavy", or "Very Heavy" and a warning if capacity is exceeded.
 - **Git Commit:** `ui: update dashboard with crowd level labels and capacity warning`
+- **Status:** [x] Done
 
 ## Task 8: Constants Cleanup
 - **Goal:** Centralize roles and session status strings to prevent typos.

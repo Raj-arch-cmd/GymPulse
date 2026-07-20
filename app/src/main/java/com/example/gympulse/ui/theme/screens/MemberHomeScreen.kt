@@ -45,6 +45,8 @@ fun MemberHomeScreen(
 ) {
     val selectedGym by gymViewModel.selectedGym.collectAsStateWithLifecycle()
     val liveCount by gymViewModel.liveCount.collectAsStateWithLifecycle()
+    val crowdLevel by gymViewModel.crowdLevel.collectAsStateWithLifecycle()
+    val showOverCapacityWarning by gymViewModel.showOverCapacityWarning.collectAsStateWithLifecycle()
     val isCheckedIn by sessionViewModel.isCheckedIn.collectAsStateWithLifecycle()
     val sessionState by sessionViewModel.sessionState.collectAsStateWithLifecycle()
     val visitCount by sessionViewModel.visitCount.collectAsStateWithLifecycle()
@@ -95,13 +97,6 @@ fun MemberHomeScreen(
         locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
 
-    val occupancyStatus = when {
-        liveCount == 0 -> Triple("Empty", Color(0xFF00E5A0), "Great time to go!")
-        liveCount <= 10 -> Triple("Quiet", Color(0xFF00E5A0), "Plenty of space available")
-        liveCount <= 25 -> Triple("Moderate", Color(0xFFFFA500), "Getting a bit busy")
-        else -> Triple("Packed", Color(0xFFFF5252), "Very crowded right now")
-    }
-
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0D0D0D))) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
@@ -146,10 +141,18 @@ fun MemberHomeScreen(
             // Occupancy Card
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))) {
                 Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Live Occupancy", fontSize = 14.sp, color = Color(0xFF888888))
-                    Text(if (selectedGym != null) "$liveCount" else "--", fontSize = 72.sp, fontWeight = FontWeight.Bold, color = occupancyStatus.second)
-                    Box(modifier = Modifier.background(occupancyStatus.second.copy(alpha = 0.15f), RoundedCornerShape(20.dp)).padding(horizontal = 16.dp, vertical = 6.dp)) {
-                        Text("${occupancyStatus.first} — ${occupancyStatus.third}", fontSize = 12.sp, color = occupancyStatus.second)
+                    Text(crowdLevel, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(if (selectedGym != null) "$liveCount Members" else "-- Members", fontSize = 16.sp, color = Color(0xFF888888))
+
+                    if (showOverCapacityWarning) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "⚠️ Above recommended capacity",
+                            fontSize = 13.sp,
+                            color = Color(0xFFFF5252),
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
