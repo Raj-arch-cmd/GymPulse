@@ -38,12 +38,15 @@ class GeofenceManager(private val context: Context) {
             .setRequestId(gymId)
             .setCircularRegion(latitude, longitude, 150f) // 150m radius
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
-            // We listen for EXIT (leaving) for auto-checkout recovery
-            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_EXIT)
+            // We listen for EXIT (to trigger recovery) and ENTER (to cancel recovery)
+            .setTransitionTypes(
+                Geofence.GEOFENCE_TRANSITION_EXIT or
+                        Geofence.GEOFENCE_TRANSITION_ENTER
+            )
             .build()
 
         val request = GeofencingRequest.Builder()
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_EXIT)
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_EXIT or GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .addGeofence(geofence)
             .build()
 

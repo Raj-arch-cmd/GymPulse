@@ -1,9 +1,11 @@
 package com.example.gympulse.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gympulse.repository.SessionRepository
+import com.example.gympulse.worker.RecoveryWorkManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -65,12 +67,16 @@ class SessionViewModel : ViewModel() {
         }
     }
 
-    fun checkOut(userId: String, gymId: String, silent: Boolean = false) {
+    fun checkOut(context: Context, userId: String, gymId: String, silent: Boolean = false) {
         viewModelScope.launch {
             if (!silent) _sessionState.value = SessionState.Loading
             val result = repository.checkOut(userId, gymId)
             if (result.isSuccess) {
-                if (!silent) _sessionState.value = SessionState.CheckedOut
+                if (!silent) {
+                    _sessionState.value = SessionState.CheckedOut
+                    // Manual checkout successful, cancel any pending recovery work
+                    RecoveryWorkManager.cancelRecovery(context, userId)
+                }
             } else {
                 if (!silent) {
                     _sessionState.value = SessionState.Error(

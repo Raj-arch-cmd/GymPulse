@@ -11,6 +11,7 @@ import androidx.work.workDataOf
 import com.example.gympulse.repository.SessionRepository
 import com.example.gympulse.util.Constants
 import com.example.gympulse.worker.CheckoutReminderWorker
+import com.example.gympulse.worker.RecoveryWorkManager
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import com.google.firebase.auth.FirebaseAuth
@@ -62,6 +63,12 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                             Log.d("Geofence", "No active session. Recovery not needed.")
                         }
                     }
+                }
+
+                // CANCELLATION TRIGGER: Stop recovery chain if user re-enters the gym
+                Geofence.GEOFENCE_TRANSITION_ENTER -> {
+                    Log.d("Geofence", "Re-entered gym: $gymId. Cancelling any pending recovery work.")
+                    RecoveryWorkManager.cancelRecovery(context, userId)
                 }
             }
         }

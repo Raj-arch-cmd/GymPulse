@@ -171,7 +171,11 @@ fun MemberHomeScreen(
             Button(
                 onClick = {
                     val gId = selectedGym?.gymId ?: return@Button
-                    if (isCheckedIn) sessionViewModel.checkOut(userId, gId) else sessionViewModel.checkIn(userId, gId)
+                    if (isCheckedIn) {
+                        sessionViewModel.checkOut(context, userId, gId)
+                    } else {
+                        sessionViewModel.checkIn(userId, gId)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
